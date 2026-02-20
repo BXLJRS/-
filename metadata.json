@@ -1,0 +1,5 @@
+{
+  "name": "Debate Draw Pro",
+  "description": "A professional tool for organizing and randomly selecting discussion topics over a 3-day debate interview session, featuring persistent storage and AI-powered topic suggestions.",
+  "requestFramePermissions": []
+}
