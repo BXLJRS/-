@@ -1,5 +1,5 @@
 {
   "name": "Debate Draw Pro",
-  "description": "A professional tool for organizing and randomly selecting discussion topics over a 3-day debate interview session, featuring persistent storage and AI-powered topic suggestions.",
+  "description": "토론 주제 관리 및 무작위 추첨을 위한 전문적인 도구입니다. 3일간의 세션 관리, 동적 저장소 추가/삭제, AI 주제 추천 기능을 제공합니다.",
   "requestFramePermissions": []
 }
