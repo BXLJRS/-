@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Topic } from '../types';
+import Modal from './Modal';
 import { CheckCircle, RotateCcw, Undo2, Play, Info, Shuffle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -17,6 +18,20 @@ const DrawingRoom: React.FC<DrawingRoomProps> = ({ slotName, topics, lastDrawnId
   const [result, setResult] = useState<Topic | null>(null);
   const [shuffleText, setShuffleText] = useState("");
   
+  // Modal State
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'info' | 'warning' | 'success' | 'danger';
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
+
   const availableTopics = topics.filter(t => !t.isUsed);
   const usedCount = topics.filter(t => t.isUsed).length;
 
@@ -50,17 +65,26 @@ const DrawingRoom: React.FC<DrawingRoomProps> = ({ slotName, topics, lastDrawnId
 
   const handleUndo = () => {
     if (!lastDrawnId) return;
-    if (window.confirm('방금 뽑은 주제를 취소하고 다시 추첨함으로 되돌릴까요?')) {
-      onUndo();
-    }
+    setModalConfig({
+      isOpen: true,
+      title: '추첨 취소',
+      message: '방금 뽑은 주제를 취소하고 다시 추첨함으로 되돌릴까요?',
+      type: 'info',
+      onConfirm: onUndo
+    });
   };
 
   const confirmReset = () => {
-    const message = `[경고] 모든 추첨 기록을 초기화하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 모든 주제가 다시 추첨 대상이 됩니다.\n정말 초기화하시겠습니까?`;
-    if (window.confirm(message)) {
-      onReset();
-      setResult(null);
-    }
+    setModalConfig({
+      isOpen: true,
+      title: '기록 초기화',
+      message: '모든 추첨 기록을 초기화하시겠습니까? 이 작업은 되돌릴 수 없으며, 모든 주제가 다시 추첨 대상이 됩니다.',
+      type: 'danger',
+      onConfirm: () => {
+        onReset();
+        setResult(null);
+      }
+    });
   };
 
   return (
@@ -82,14 +106,14 @@ const DrawingRoom: React.FC<DrawingRoomProps> = ({ slotName, topics, lastDrawnId
         <div className="flex flex-col gap-2">
           <button 
             onClick={confirmReset}
-            className="w-full flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border-2 border-dashed border-red-200 text-red-400 hover:bg-red-50 hover:border-red-400 hover:text-red-600 transition-all font-black text-[10px] md:text-xs"
+            className="w-full flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border-2 border-dashed border-red-200 text-red-400 hover:bg-red-50 hover:border-red-400 hover:text-red-600 transition-all font-black text-[10px] md:text-xs cursor-pointer"
           >
             <RotateCcw className="w-3 h-3 md:w-4 md:h-4" /> 기록 초기화
           </button>
           {usedCount > 0 && (
             <button 
               onClick={handleUndo}
-              className="w-full flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all font-black text-[10px] md:text-xs"
+              className="w-full flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all font-black text-[10px] md:text-xs cursor-pointer"
             >
               <Undo2 className="w-3 h-3 md:w-4 md:h-4" /> 이전 행동 되감기
             </button>
@@ -137,7 +161,7 @@ const DrawingRoom: React.FC<DrawingRoomProps> = ({ slotName, topics, lastDrawnId
                  <button 
                   onClick={handleDraw}
                   disabled={isDrawing || availableTopics.length === 0}
-                  className="w-full max-w-md py-5 md:py-6 rounded-[1.5rem] md:rounded-[2rem] bg-slate-900 text-white font-black text-lg md:text-2xl shadow-2xl shadow-slate-300 hover:bg-indigo-600 hover:scale-[1.05] active:scale-[0.98] transition-all disabled:opacity-30 disabled:scale-100"
+                  className="w-full max-w-md py-5 md:py-6 rounded-[1.5rem] md:rounded-[2rem] bg-slate-900 text-white font-black text-lg md:text-2xl shadow-2xl shadow-slate-300 hover:bg-indigo-600 hover:scale-[1.05] active:scale-[0.98] transition-all disabled:opacity-30 disabled:scale-100 cursor-pointer"
                 >
                   다음 주제 뽑기
                 </button>
@@ -183,7 +207,7 @@ const DrawingRoom: React.FC<DrawingRoomProps> = ({ slotName, topics, lastDrawnId
               <button 
                 onClick={handleDraw}
                 disabled={isDrawing || availableTopics.length === 0}
-                className={`group relative w-full py-6 md:py-7 rounded-[1.5rem] md:rounded-[2rem] font-black text-xl md:text-2xl tracking-tight shadow-2xl transition-all duration-300 
+                className={`group relative w-full py-6 md:py-7 rounded-[1.5rem] md:rounded-[2rem] font-black text-xl md:text-2xl tracking-tight shadow-2xl transition-all duration-300 cursor-pointer
                   ${availableTopics.length === 0 
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
                     : 'bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700 hover:scale-105 active:scale-95'}`}
@@ -204,8 +228,18 @@ const DrawingRoom: React.FC<DrawingRoomProps> = ({ slotName, topics, lastDrawnId
           )}
         </AnimatePresence>
       </div>
+
+      <Modal 
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 };
+
 
 export default DrawingRoom;

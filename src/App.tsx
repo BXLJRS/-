@@ -3,6 +3,7 @@ import { AppData, ViewMode, Slot } from './types';
 import Sidebar from './components/Sidebar';
 import TopicManager from './components/TopicManager';
 import DrawingRoom from './components/DrawingRoom';
+import Modal from './components/Modal';
 import { Plus, X, Edit3, Shuffle } from 'lucide-react';
 
 const createEmptySlot = (id: number, name?: string): Slot => ({
@@ -23,6 +24,20 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.MANAGE);
   const [data, setData] = useState<AppData>(INITIAL_DATA);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Modal State
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'info' | 'warning' | 'success' | 'danger';
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
 
   useEffect(() => {
     try {
@@ -86,26 +101,38 @@ const App: React.FC = () => {
 
   const removeSlot = (index: number) => {
     if (activeDayData.slots.length <= 1) {
-      alert("최소 하나의 저장소는 유지해야 합니다.");
+      setModalConfig({
+        isOpen: true,
+        title: '삭제 불가',
+        message: '최소 하나의 저장소는 유지해야 합니다.',
+        type: 'warning'
+      });
       return;
     }
-    if (!window.confirm(`'${activeDayData.slots[index].name}' 저장소를 삭제하시겠습니까?`)) return;
 
-    setData(prev => {
-      const day = prev[activeDay];
-      const newSlots = day.slots.filter((_, i) => i !== index);
-      let newActiveId = day.activeSlotId;
-      if (newActiveId >= newSlots.length) {
-        newActiveId = Math.max(0, newSlots.length - 1);
+    setModalConfig({
+      isOpen: true,
+      title: '저장소 삭제',
+      message: `'${activeDayData.slots[index].name}' 저장소를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`,
+      type: 'danger',
+      onConfirm: () => {
+        setData(prev => {
+          const day = prev[activeDay];
+          const newSlots = day.slots.filter((_, i) => i !== index);
+          let newActiveId = day.activeSlotId;
+          if (newActiveId >= newSlots.length) {
+            newActiveId = Math.max(0, newSlots.length - 1);
+          }
+          return {
+            ...prev,
+            [activeDay]: { 
+              ...day, 
+              slots: newSlots,
+              activeSlotId: newActiveId
+            }
+          };
+        });
       }
-      return {
-        ...prev,
-        [activeDay]: { 
-          ...day, 
-          slots: newSlots,
-          activeSlotId: newActiveId
-        }
-      };
     });
   };
 
@@ -167,13 +194,13 @@ const App: React.FC = () => {
             <div className="flex bg-slate-200 p-1 rounded-2xl w-full sm:w-fit shadow-inner">
               <button 
                 onClick={() => setViewMode(ViewMode.MANAGE)}
-                className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl text-xs md:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${viewMode === ViewMode.MANAGE ? 'bg-white shadow-lg text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl text-xs md:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${viewMode === ViewMode.MANAGE ? 'bg-white shadow-lg text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 <Edit3 className="w-4 h-4" />주제 관리
               </button>
               <button 
                 onClick={() => setViewMode(ViewMode.DRAW)}
-                className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl text-xs md:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${viewMode === ViewMode.DRAW ? 'bg-white shadow-lg text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl text-xs md:text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${viewMode === ViewMode.DRAW ? 'bg-white shadow-lg text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 <Shuffle className="w-4 h-4" />무작위 추첨
               </button>
@@ -186,7 +213,7 @@ const App: React.FC = () => {
               <div key={slot.id} className="group relative flex-shrink-0">
                 <button
                   onClick={() => setActiveSlotId(index)}
-                  className={`px-4 md:px-6 py-2.5 rounded-2xl text-xs md:text-sm font-bold transition-all border-2 flex items-center gap-2 whitespace-nowrap ${
+                  className={`px-4 md:px-6 py-2.5 rounded-2xl text-xs md:text-sm font-bold transition-all border-2 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                     activeDayData.activeSlotId === index 
                     ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-200' 
                     : 'bg-white border-slate-200 text-slate-400 hover:border-indigo-300 hover:text-indigo-500'
@@ -197,7 +224,7 @@ const App: React.FC = () => {
                 {activeDayData.slots.length > 1 && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); removeSlot(index); }}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10 cursor-pointer"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -206,7 +233,7 @@ const App: React.FC = () => {
             ))}
             <button 
               onClick={addSlot}
-              className="w-10 h-10 rounded-2xl border-2 border-dashed border-slate-300 text-slate-400 hover:border-indigo-400 hover:text-indigo-500 flex items-center justify-center transition-all bg-white/50 flex-shrink-0"
+              className="w-10 h-10 rounded-2xl border-2 border-dashed border-slate-300 text-slate-400 hover:border-indigo-400 hover:text-indigo-500 flex items-center justify-center transition-all bg-white/50 flex-shrink-0 cursor-pointer"
               title="저장소 추가"
             >
               <Plus className="w-5 h-5" />
@@ -232,6 +259,15 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
+
+      <Modal 
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 };

@@ -26,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeDay, setActiveDay, dayLabels })
             <button
               key={day}
               onClick={() => setActiveDay(day)}
-              className={`w-full flex flex-col items-start gap-1 px-4 py-3 md:px-5 md:py-4 rounded-2xl transition-all duration-300 ${
+              className={`w-full flex flex-col items-start gap-1 px-4 py-3 md:px-5 md:py-4 rounded-2xl transition-all duration-300 cursor-pointer ${
                 activeDay === day 
                 ? 'bg-slate-800 text-white shadow-xl shadow-black/20 ring-1 ring-slate-700' 
                 : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'

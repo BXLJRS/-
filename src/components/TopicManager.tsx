@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Topic, Slot } from '../types';
 import { suggestDebateTopics } from '../services/geminiService';
+import Modal from './Modal';
 import { Database, Pen, Wand2, Plus, Trash2, Eye, EyeOff, ShieldCheck, AlertCircle } from 'lucide-react';
 
 interface TopicManagerProps {
@@ -13,6 +14,12 @@ const TopicManager: React.FC<TopicManagerProps> = ({ activeSlot, setSlotData }) 
   const [isEditingName, setIsEditingName] = useState(false);
   const [isListVisible, setIsListVisible] = useState(false);
   const [tempName, setTempName] = useState(activeSlot.name);
+  
+  // Local Modal State
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; topicId: string | null }>({
+    isOpen: false,
+    topicId: null
+  });
 
   const topics = activeSlot.topics;
   const usedCount = topics.filter(t => t.isUsed).length;
@@ -43,9 +50,13 @@ const TopicManager: React.FC<TopicManagerProps> = ({ activeSlot, setSlotData }) 
   };
 
   const removeTopic = (id: string) => {
-    if (window.confirm('이 주제를 정말 삭제하시겠습니까?')) {
+    setDeleteModal({ isOpen: true, topicId: id });
+  };
+
+  const confirmDelete = () => {
+    if (deleteModal.topicId) {
       setSlotData({ 
-        topics: topics.filter(t => t.id !== id) 
+        topics: topics.filter(t => t.id !== deleteModal.topicId) 
       });
     }
   };
@@ -90,14 +101,14 @@ const TopicManager: React.FC<TopicManagerProps> = ({ activeSlot, setSlotData }) 
                 autoFocus
                 className="bg-white border-2 border-indigo-400 px-4 py-2 rounded-xl font-bold text-slate-800 focus:outline-none w-full max-w-[200px] md:max-w-xs"
               />
-              <button onClick={saveSlotName} className="text-indigo-600 font-black text-sm px-2 hover:text-indigo-800">저장</button>
+              <button onClick={saveSlotName} className="text-indigo-600 font-black text-sm px-2 hover:text-indigo-800 cursor-pointer">저장</button>
             </div>
           ) : (
             <div className="flex items-center gap-3 overflow-hidden">
               <h2 className="text-lg md:text-xl font-black text-slate-800 truncate">{activeSlot.name}</h2>
               <button 
                 onClick={() => { setTempName(activeSlot.name); setIsEditingName(true); }}
-                className="text-slate-400 hover:text-indigo-500 transition-colors p-1"
+                className="text-slate-400 hover:text-indigo-500 transition-colors p-1 cursor-pointer"
               >
                 <Pen className="w-3 h-3" />
               </button>
@@ -109,14 +120,14 @@ const TopicManager: React.FC<TopicManagerProps> = ({ activeSlot, setSlotData }) 
           <button 
             onClick={handleAiSuggest}
             disabled={isAiLoading}
-            className="flex-1 md:flex-none px-3 md:px-4 py-3 text-[10px] md:text-xs font-black text-indigo-600 bg-white border border-indigo-100 rounded-xl hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+            className="flex-1 md:flex-none px-3 md:px-4 py-3 text-[10px] md:text-xs font-black text-indigo-600 bg-white border border-indigo-100 rounded-xl hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm cursor-pointer"
           >
             {isAiLoading ? <span className="animate-spin">◌</span> : <Wand2 className="w-3 h-3 md:w-4 md:h-4" />}
             AI 추천
           </button>
           <button 
             onClick={addTopic}
-            className="flex-1 md:flex-none px-4 md:px-5 py-3 text-[10px] md:text-xs font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+            className="flex-1 md:flex-none px-4 md:px-5 py-3 text-[10px] md:text-xs font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Plus className="w-3 h-3 md:w-4 md:h-4" /> 주제 추가
           </button>
@@ -139,7 +150,7 @@ const TopicManager: React.FC<TopicManagerProps> = ({ activeSlot, setSlotData }) 
           </p>
           <button 
             onClick={() => setIsListVisible(true)}
-            className="px-8 py-4 md:px-10 md:py-5 bg-slate-900 text-white rounded-[1.5rem] font-black hover:bg-indigo-600 hover:scale-105 transition-all shadow-xl shadow-slate-200 flex items-center gap-3 text-sm md:text-base"
+            className="px-8 py-4 md:px-10 md:py-5 bg-slate-900 text-white rounded-[1.5rem] font-black hover:bg-indigo-600 hover:scale-105 transition-all shadow-xl shadow-slate-200 flex items-center gap-3 text-sm md:text-base cursor-pointer"
           >
             <Eye className="w-4 h-4 md:w-5 md:h-5" />
             목록 보기 / 편집하기
@@ -154,7 +165,7 @@ const TopicManager: React.FC<TopicManagerProps> = ({ activeSlot, setSlotData }) 
             </div>
             <button 
               onClick={() => setIsListVisible(false)}
-              className="px-3 py-2 md:px-4 md:py-2 bg-slate-100 rounded-xl text-[10px] md:text-xs font-black text-slate-600 hover:bg-slate-200 flex items-center gap-2 transition-all"
+              className="px-3 py-2 md:px-4 md:py-2 bg-slate-100 rounded-xl text-[10px] md:text-xs font-black text-slate-600 hover:bg-slate-200 flex items-center gap-2 transition-all cursor-pointer"
             >
               <EyeOff className="w-3 h-3 md:w-4 md:h-4" /> 목록 숨기기
             </button>
@@ -194,7 +205,7 @@ const TopicManager: React.FC<TopicManagerProps> = ({ activeSlot, setSlotData }) 
                   </div>
                   <button 
                     onClick={() => removeTopic(topic.id)}
-                    className={`p-2 transition-colors ${topic.isUsed ? 'text-red-300 hover:text-red-700' : 'text-slate-200 hover:text-red-500'}`}
+                    className={`p-2 transition-colors cursor-pointer ${topic.isUsed ? 'text-red-300 hover:text-red-700' : 'text-slate-200 hover:text-red-500'}`}
                   >
                     <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
@@ -238,8 +249,18 @@ const TopicManager: React.FC<TopicManagerProps> = ({ activeSlot, setSlotData }) 
           </div>
         </div>
       )}
+
+      <Modal 
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, topicId: null })}
+        onConfirm={confirmDelete}
+        title="주제 삭제"
+        message="이 주제를 정말 삭제하시겠습니까? 삭제된 주제는 복구할 수 없습니다."
+        type="danger"
+      />
     </div>
   );
 };
+
 
 export default TopicManager;
