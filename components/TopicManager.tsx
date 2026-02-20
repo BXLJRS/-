@@ -17,9 +17,16 @@ const TopicManager: React.FC<TopicManagerProps> = ({ activeSlot, setSlotData }) 
   const topics = activeSlot.topics;
   const usedCount = topics.filter(t => t.isUsed).length;
 
+  const generateId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  };
+
   const addTopic = () => {
     const newTopic: Topic = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       title: '',
       sideA: '',
       sideB: '',
@@ -49,7 +56,7 @@ const TopicManager: React.FC<TopicManagerProps> = ({ activeSlot, setSlotData }) 
     try {
       const suggestions = await suggestDebateTopics("흥미로운 시사 토론 주제");
       const newTopics: Topic[] = suggestions.map((s: any) => ({
-        id: crypto.randomUUID(),
+        id: generateId(),
         title: s.title,
         sideA: s.sideA,
         sideB: s.sideB,

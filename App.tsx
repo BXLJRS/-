@@ -25,20 +25,25 @@ const App: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('debate_draw_data_v3');
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem('debate_draw_data_v3');
+      if (saved) {
         setData(JSON.parse(saved));
-      } catch (e) {
-        console.error("데이터 로드 실패");
       }
+    } catch (e) {
+      console.error("데이터 로드 실패 또는 localStorage 접근 거부", e);
+    } finally {
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem('debate_draw_data_v3', JSON.stringify(data));
+      try {
+        localStorage.setItem('debate_draw_data_v3', JSON.stringify(data));
+      } catch (e) {
+        console.error("데이터 저장 실패", e);
+      }
     }
   }, [data, isLoaded]);
 
